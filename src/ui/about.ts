@@ -98,54 +98,43 @@ const TABS: TabSpec[] = [
     render(el) {
       para(
         el,
-        "Are.na Desk lays out one channel at a time as a desk of draggable " +
-          "cards. It's for looking at a channel spatially instead of as a grid " +
-          "— spread things out, cluster what belongs together, and come back " +
+        "Are.na Desk lays out a channel as a set of draggable " +
+          "cards, so you can explore them spatially. " +
+          "Spread things out, cluster what belongs together, and come back " +
           "to it later.",
       );
       defs(el, [
-        ["1", "Paste a channel url or slug in the middle of the screen."],
-        ["2", "Drag a card to move it. Resize from its bottom-right corner. Click it for details and a link back to Are.na."],
-        ["3", "Switch between scatter and by date up top, or hide block types with filter."],
+        ["1", "Paste a channel url or slug in field in the center of the page. Public channels work by default, Private ones require a login."],
+        ["2", "Once a channel loads, you can drag or resize blocks to move them around. Click a block for its details."],
+        ["3", "On a channel you can switch between scatter and date modes, or use the filter to hide block types."],
       ]);
       para(
         el,
-        "Your scatter layout is saved per channel in this browser, so a desk " +
-          "you arranged is still arranged when you come back. reset re-scatters it.",
+        "Your scatter layout is saved per channel in this browser, so your arrangements " +
+          "are here when you come back.",
       );
       para(
         el,
-        "Channels load 500 blocks at a time — bigger ones show a load more control.",
+        "Channels load 500 blocks at a time.",
       );
     },
   },
   {
     id: "arena",
-    label: "your are.na",
+    label: "your Are.na",
     render(el) {
       para(
         el,
-        "Public channels are accessible without any additional permissions — " +
-          "paste a url or slug and go.",
+        "To open your private channel, or browse your channel list, " +
+          "you need a personal access token from " +
+          "Are.na. When you create one, choose Read as the permission.",
       );
+      link(el, "Create a read-only token ↗", TOKENS_URL);
+      para(el, "Click on Log In to paste your token.");
       para(
         el,
-        "To open your own private channels, or browse your channel list " +
-          "without typing slugs, you'll need a personal access token from " +
-          "Are.na. When you create one, choose Read.",
-      );
-      link(el, "create a read-only token ↗", TOKENS_URL);
-      para(el, "Paste it into log in, top right.");
-      para(
-        el,
-        "Are.na Desk only ever reads — it never creates, edits, or deletes " +
-          "anything in your account or channels. A read-only token holds that " +
-          "line at Are.na's end too, whatever this app does.",
-      );
-      para(
-        el,
-        "Live channel search additionally needs an Are.na Premium account. " +
-          "Without it, paste a url or slug instead.",
+        "Are.na Desk only ever reads - it does not create, edit, or delete " +
+          "anything in your account or channels.",
       );
     },
   },
@@ -155,18 +144,14 @@ const TABS: TabSpec[] = [
     render(el) {
       para(
         el,
-        "The site is hosted so it's reachable on the web, but there's no " +
-          "application server behind it: no accounts, no database, no " +
-          "analytics, no tracking, no third-party scripts.",
+        "The site is hosted on DigitalOcean, with no analytics, tracking, "+
+        "or third-party scripts."
       );
       para(
         el,
-        "Nothing you do here goes anywhere but Are.na — its API at api.are.na, " +
-          "plus the hosts that serve block images (images.are.na and Are.na's " +
-          "CloudFront CDN). That's the whole list; open your network tab and " +
-          "check.",
+        "Are.na Desk only communicates with the Are.na API at api.are.na. " +
+        "Everything is kept in this browser's local storage."
       );
-      para(el, "Everything is kept in this browser's local storage:");
       defs(
         el,
         [
@@ -179,9 +164,8 @@ const TABS: TabSpec[] = [
       );
       para(
         el,
-        "log out removes the token from this browser. To revoke the token " +
-          "itself so it stops working everywhere, delete it on Are.na. " +
-          "Clearing your browser data removes all of the above.",
+        "log out removes the token from this browser. To revoke the token entirely, " +
+          "delete it on Are.na. "
       );
       link(el, "manage your tokens on are.na ↗", TOKENS_URL);
     },
@@ -204,8 +188,9 @@ const TABS: TabSpec[] = [
     id: "credits",
     label: "credits",
     render(el) {
-      para(el, "Made by Daniel. An independent project, not affiliated with Are.na.");
+      para(el, "Made by Daniel Lucas, this is an independent project, not affiliated with Are.na.");
       link(el, "source and bug reports on github ↗", REPO_URL);
+      link(el, "danielucas.com ↗", "https://danielucas.com");
     },
   },
 ];
