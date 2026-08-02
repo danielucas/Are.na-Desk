@@ -1,0 +1,13 @@
+node_modules
+dist
+.DS_Store
+public/favicon.ico
+public/favicon-16x16.png
+public/favicon-32x32.png
+public/pwa-192x192.png
+public/pwa-512x512.png
+public/apple-touch-icon.png
+
+# Kept locally, not tracked in the repo
+docs/
+.claude/

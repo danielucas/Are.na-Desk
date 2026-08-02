@@ -1,0 +1,902 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --ink: #000;
+  --paper: #fff;
+  --muted: #888;
+  --border: #ccc;
+  --surface-hover: #f7f7f7;
+  --row-border: #eee;
+  --chrome-top: 12px;
+  --chrome-top-padding: 8px;
+  --chrome-bar-height: 30px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 11px;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  overflow: hidden;
+}
+
+/* PixiJS canvas — sits under all DOM chrome */
+.desk-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: block;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--ink);
+  padding: 0;
+  text-decoration: none;
+}
+
+button:hover {
+  text-decoration: underline;
+}
+
+button:focus-visible {
+  outline: 1px solid var(--ink);
+  outline-offset: 2px;
+}
+
+input[type="text"],
+input[type="password"] {
+  font-family: inherit;
+  font-size: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--muted);
+  border-radius: 0;
+  padding: 4px 6px;
+  outline: none;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus {
+  border-color: var(--ink);
+  box-shadow: none;
+}
+
+input::placeholder {
+  color: var(--muted);
+}
+
+a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* chrome layout */
+
+.chrome-logo {
+  position: fixed;
+  top: var(--chrome-top);
+  left: 14px;
+  height: var(--chrome-bar-height);
+  display: flex;
+  align-items: center;
+  color: var(--ink);
+  z-index: 10;
+}
+
+.chrome-logo:hover {
+  text-decoration: none;
+  opacity: 0.6;
+}
+
+.chrome-login {
+  /* positioning is handled by .chrome-login-area */
+  color: var(--ink);
+}
+
+/* dim desk when searching over an active channel */
+
+.chrome-prompt-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  background: rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.chrome-prompt-backdrop.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chrome-prompt-backdrop {
+    transition: none;
+  }
+}
+
+.chrome-prompt {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  /* 412px == input 340 + two 28px side buttons + two 8px gaps */
+  width: min(412px, calc(100vw - 28px));
+}
+
+.chrome-prompt-center {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.chrome-prompt-welcome {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink);
+  text-align: center;
+}
+
+.chrome-prompt-welcome[hidden] {
+  display: none;
+}
+
+.chrome-prompt-search-row {
+  --prompt-side-size: 28px;
+  --prompt-side-gap: 8px;
+  display: flex;
+  align-items: stretch;
+  gap: var(--prompt-side-gap);
+  width: 100%;
+}
+
+.chrome-prompt-input-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.chrome-prompt input {
+  width: 100%;
+}
+
+.chrome-prompt-side-btn {
+  width: var(--prompt-side-size);
+  flex-shrink: 0;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--muted);
+  border-radius: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chrome-prompt-side-btn:hover:not(:disabled) {
+  text-decoration: none;
+  border-color: var(--ink);
+}
+
+.chrome-prompt-side-btn:disabled {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  cursor: default;
+}
+
+.chrome-prompt-side-btn[hidden] {
+  display: none;
+}
+
+.chrome-prompt-side-btn:focus-visible:disabled {
+  outline: none;
+}
+
+.chrome-prompt-feedback {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: var(--muted);
+  min-height: 1em;
+  text-align: center;
+  width: 100%;
+  pointer-events: none;
+}
+
+/* search results — absolute dropdown, does not shift the input */
+
+.chrome-prompt-results {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 100%;
+  max-height: 0;
+  overflow: hidden;
+  background: transparent;
+  border: 1px solid transparent;
+  box-sizing: border-box;
+}
+
+.chrome-prompt-results--open {
+  max-height: 280px;
+  overflow-y: auto;
+  background: var(--paper);
+  border-color: var(--border);
+}
+
+.chrome-prompt-result-row {
+  font-size: 11px;
+  color: var(--ink);
+  cursor: pointer;
+  padding: 5px 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-bottom: 1px solid var(--row-border);
+}
+
+.chrome-prompt-result-row:last-child {
+  border-bottom: none;
+}
+
+.chrome-prompt-result-row:hover,
+.chrome-prompt-result-row.is-highlighted {
+  background: var(--surface-hover);
+  text-decoration: none;
+}
+
+.chrome-prompt-result-row.is-highlighted {
+  color: var(--ink);
+}
+
+/* login area — token input + hint + feedback */
+
+.chrome-login-area {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding-top: var(--chrome-top-padding);
+  position: fixed;
+  top: var(--chrome-top);
+  right: 14px;
+  min-height: var(--chrome-bar-height);
+  z-index: 10;
+}
+
+.chrome-login-form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.chrome-login-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.chrome-login-input {
+  width: 280px;
+}
+
+.chrome-login-submit {
+  width: 28px;
+  flex-shrink: 0;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--muted);
+  border-radius: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chrome-login-submit:hover:not(:disabled) {
+  text-decoration: none;
+  border-color: var(--ink);
+}
+
+.chrome-login-submit:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.chrome-login-hint {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.chrome-login-note,
+.chrome-login-feedback {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* .chrome-login-logout inherits all needed styles from the base button rules */
+
+.chrome-login-name {
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.chrome-login-name:hover {
+  text-decoration: underline;
+}
+
+.chrome-login-name-wrap {
+  position: relative;
+}
+
+.chrome-login-dropdown {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  left: auto;
+  width: 280px;
+  max-width: min(280px, calc(100vw - 28px));
+  max-height: min(60vh, 360px);
+  overflow-y: auto;
+}
+
+.chrome-login-channel-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.chrome-login-channel-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chrome-login-channel-count {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--muted);
+}
+
+.channel-vis {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.channel-vis--private {
+  color: #c44;
+}
+
+.channel-vis--public {
+  color: #999;
+}
+
+.channel-vis--collab {
+  color: #3a8;
+}
+
+.chrome-login-dropdown-status {
+  padding: 8px 10px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* channel header bar */
+
+.channel-header {
+  position: fixed;
+  top: var(--chrome-top);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: var(--chrome-top-padding);
+  gap: 4px;
+  font-size: 11px;
+  color: var(--muted);
+  z-index: 10;
+  max-width: calc(100vw - 280px);
+}
+
+.channel-header-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  text-align: center;
+}
+
+.channel-header-meta-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.channel-header-load-more {
+  flex-shrink: 0;
+  color: var(--muted);
+  padding: 0;
+}
+
+.channel-header-load-more:hover:not(:disabled) {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+.channel-header-load-more:disabled {
+  opacity: 0.6;
+  cursor: default;
+  text-decoration: none;
+}
+
+.channel-header-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.channel-header-layout {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.channel-header-filter-wrap {
+  position: relative;
+}
+
+.channel-header-filter-btn {
+  color: var(--muted);
+  padding: 0 4px;
+}
+
+.channel-header-filter-btn.is-active {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+.channel-header-filter-btn:hover:not(:disabled) {
+  color: var(--ink);
+  text-decoration: none;
+  opacity: 0.7;
+}
+
+.channel-header-filter-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.channel-header-filter-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 140px;
+  z-index: 11;
+}
+
+.channel-header-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  font-size: 11px;
+  color: var(--ink);
+  cursor: pointer;
+  border-bottom: 1px solid var(--row-border);
+}
+
+.channel-header-filter-row:last-child {
+  border-bottom: none;
+}
+
+.channel-header-filter-row:hover {
+  background: var(--surface-hover);
+}
+
+.channel-header-filter-row input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 10px;
+  height: 10px;
+  margin: 0;
+  flex-shrink: 0;
+  border: 1px solid var(--ink);
+  background: transparent;
+  cursor: pointer;
+}
+
+.channel-header-filter-row input[type="checkbox"]:checked {
+  background: var(--ink);
+}
+
+.channel-header-reset-btn {
+  color: var(--muted);
+  padding: 0 4px;
+}
+
+.channel-header-reset-btn:hover {
+  color: var(--ink);
+  text-decoration: none;
+  opacity: 0.7;
+}
+
+.channel-header-reset-btn[hidden] {
+  display: none;
+}
+
+.channel-header-layout-btn {
+  color: var(--muted);
+  padding: 0 4px;
+}
+
+.channel-header-layout-btn.is-active {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+.channel-header-layout-btn:hover:not(.is-active) {
+  color: var(--ink);
+  opacity: 0.7;
+  text-decoration: none;
+}
+
+.channel-arena-row {
+  position: fixed;
+  bottom: 14px;
+  right: 14px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  z-index: 10;
+}
+
+.channel-refresh-status {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.channel-arena-link {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.channel-arena-link:hover {
+  color: var(--ink);
+}
+
+/* metadata popup */
+
+.desk-popup {
+  position: fixed;
+  z-index: 20;
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
+  padding: 12px;
+  max-width: 300px;
+  min-width: 160px;
+  font-size: 11px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  pointer-events: auto;
+}
+
+.desk-popup-title {
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 2px;
+  word-break: break-word;
+}
+
+.desk-popup-muted {
+  color: var(--muted);
+}
+
+.desk-popup-row {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  word-break: break-word;
+}
+
+.desk-popup-label {
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.desk-popup-value {
+  color: var(--ink);
+  word-break: break-word;
+}
+
+.desk-popup-arena-link {
+  margin-top: 6px;
+  border-top: 1px solid var(--muted);
+  padding-top: 6px;
+}
+
+/* about button — bottom-left, mirroring the are.na link bottom-right */
+
+.chrome-about {
+  position: fixed;
+  bottom: 14px;
+  left: 14px;
+  z-index: 10;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.chrome-about:hover {
+  color: var(--ink);
+}
+
+/* draggable panel */
+
+.desk-panel {
+  position: fixed;
+  z-index: 30;
+  /* 440px keeps panel + centre prompt side by side at 1440 and 1512 */
+  width: 440px;
+  max-width: calc(100vw - 16px);
+  /* Fixed height, not content height: switching tabs must not resize the
+     panel out from under the cursor. Never more than half the viewport. */
+  height: min(50vh, 420px);
+  max-height: calc(100vh - 16px);
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  display: flex;
+  flex-direction: column;
+  font-size: 11px;
+}
+
+.desk-panel-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 7px 8px 7px 10px;
+  border-bottom: 1px solid var(--ink);
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  /* the bar owns its pointer gestures — don't let the browser scroll instead */
+  touch-action: none;
+}
+
+.desk-panel.is-dragging .desk-panel-bar {
+  cursor: grabbing;
+}
+
+.desk-panel-title {
+  color: var(--ink);
+}
+
+.desk-panel-close {
+  flex-shrink: 0;
+  line-height: 1;
+  color: var(--muted);
+  padding: 2px;
+}
+
+.desk-panel-close:hover {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.desk-panel-body {
+  /* fill the panel below the title bar rather than shrinking to content —
+     otherwise a short tab pulls the rail's border up with it */
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  line-height: 1.55;
+}
+
+/* tabbed variant — the tab rail scrolls nothing, the active panel scrolls */
+
+.desk-panel-body--tabs {
+  flex-direction: row;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.desk-panel-tabs {
+  flex-shrink: 0;
+  width: 108px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1px;
+  padding: 8px 0;
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+}
+
+.desk-panel-tab {
+  text-align: left;
+  white-space: nowrap;
+  padding: 5px 10px;
+  color: var(--muted);
+}
+
+.desk-panel-tab:hover {
+  color: var(--ink);
+  background: var(--surface-hover);
+  text-decoration: none;
+}
+
+.desk-panel-tab[aria-selected="true"] {
+  color: var(--ink);
+  background: var(--surface-hover);
+  text-decoration: none;
+}
+
+.desk-panel-tabpanels {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: 14px;
+}
+
+.desk-panel-tabpanel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.desk-panel-tabpanel[hidden] {
+  display: none;
+}
+
+.desk-panel-para {
+  color: var(--ink);
+}
+
+.desk-panel-link {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+.desk-panel-link:hover {
+  opacity: 0.6;
+}
+
+.desk-panel-defs {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 5px 10px;
+  width: 100%;
+}
+
+.desk-panel-defs dt {
+  color: var(--muted);
+  word-break: break-word;
+}
+
+.desk-panel-defs dd {
+  color: var(--ink);
+}
+
+/* small screens — the panel fills the width and stops being draggable
+   (panel.ts clears its inline left/top so these rules win) */
+
+@media (max-width: 600px) {
+  .desk-panel {
+    left: 8px;
+    right: 8px;
+    top: 8px;
+    width: auto;
+    max-width: none;
+  }
+
+  .desk-panel-bar {
+    cursor: default;
+    touch-action: auto;
+  }
+
+  /* a 108px rail would leave ~220px of text — put the tabs on top instead */
+  .desk-panel-body--tabs {
+    flex-direction: column;
+  }
+
+  /* wrap rather than scroll — a scrolling rail hides whole tabs off the
+     right edge, and there's no affordance saying they're there */
+  .desk-panel-tabs {
+    width: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0;
+    padding: 0;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    overflow: visible;
+  }
+
+  .desk-panel-tab {
+    padding: 8px 10px;
+  }
+
+  /* only lists with long terms collapse — "1" or "esc" on its own line
+     reads as an orphaned character, not a definition */
+  .desk-panel-defs--stack {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .desk-panel-defs--stack dd {
+    margin-bottom: 6px;
+  }
+}
+
+/* the channel header reserves room for the logo and login area on either side;
+   at narrow widths that reservation collapses it to nothing */
+
+@media (max-width: 700px) {
+  .channel-header {
+    max-width: calc(100vw - 130px);
+  }
+
+  .channel-header-toolbar {
+    flex-wrap: wrap;
+    gap: 4px 8px;
+  }
+
+  .channel-header-layout-btn,
+  .channel-header-filter-btn,
+  .channel-header-reset-btn {
+    white-space: nowrap;
+  }
+}

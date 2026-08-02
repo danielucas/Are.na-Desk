@@ -1,0 +1,23 @@
+{
+  "name": "arena-desk",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "prebuild": "node scripts/generate-pwa-icons.mjs",
+    "build": "tsc --noEmit && vite build",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "pixi.js": "^8.0.0"
+  },
+  "devDependencies": {
+    "sharp": "^0.34.2",
+    "to-ico": "^1.1.5",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.10",
+    "vite-plugin-pwa": "^0.21.2",
+    "vitest": "^1.6.0"
+  }
+}
