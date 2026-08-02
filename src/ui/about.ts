@@ -105,17 +105,17 @@ const TABS: TabSpec[] = [
       );
       defs(el, [
         ["1", "Paste a channel url or slug in field in the center of the page. Public channels work by default, Private ones require a login."],
-        ["2", "Once a channel loads, you can drag or resize blocks to move them around. Click a block for its details."],
+        ["2", "Once a channel loads, you can drag and resize blocks. Click a block for its details."],
         ["3", "On a channel you can switch between scatter and date modes, or use the filter to hide block types."],
       ]);
       para(
         el,
-        "Your scatter layout is saved per channel in this browser, so your arrangements " +
+        "Each channel layout is saved in this browser, so your arrangements " +
           "are here when you come back.",
       );
       para(
         el,
-        "Channels load 500 blocks at a time.",
+        "For performance reasons, channels load 500 blocks at a time.",
       );
     },
   },
@@ -125,7 +125,7 @@ const TABS: TabSpec[] = [
     render(el) {
       para(
         el,
-        "To open your private channel, or browse your channel list, " +
+        "To view a private channel, or browse your channels, " +
           "you need a personal access token from " +
           "Are.na. When you create one, choose Read as the permission.",
       );
@@ -188,7 +188,11 @@ const TABS: TabSpec[] = [
     id: "credits",
     label: "credits",
     render(el) {
-      para(el, "Made by Daniel Lucas, this is an independent project, not affiliated with Are.na.");
+      para(el, "Made by Daniel Lucas, this is an independent project, not affiliated with Are.na... yet");
+      para(
+        el,
+        "Built with TypeScript, Vite, and Pixi.js, talking to the Are.na API.",
+      );
       link(el, "source and bug reports on github ↗", REPO_URL);
       link(el, "danielucas.com ↗", "https://danielucas.com");
     },
