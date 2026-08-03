@@ -5,17 +5,12 @@
 import { getMe } from "./api";
 import { ApiError } from "./api";
 import { getStorage } from "./storage";
+import { TOKEN_KEY } from "./storageKeys";
 
 export interface AuthUser {
   id: number;
   name: string;
 }
-
-// ---------------------------------------------------------------------------
-// localStorage access (defensive — same pattern as persistence.ts)
-// ---------------------------------------------------------------------------
-
-const TOKEN_KEY = "arena-desk:token";
 
 // ---------------------------------------------------------------------------
 // In-memory user cache

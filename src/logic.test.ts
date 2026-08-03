@@ -4,6 +4,11 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { join, dirname, relative } from "node:path";
+import { fileURLToPath } from "node:url";
+import * as storageKeys from "./storageKeys";
+import { LAYOUT_KEY_PREFIX, STORAGE_KEY_DOCS } from "./storageKeys";
 import { parseChannelInput, isRetryableStatus, retryDelayMs } from "./api";
 import { fitView } from "./desk";
 import { computeResizeScale } from "./interactions";
@@ -52,6 +57,74 @@ describe("parseChannelInput", () => {
 // ---------------------------------------------------------------------------
 // scatterLayout / scatterInto
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// storage key registry
+//
+// The about panel publishes the key list as a privacy claim. These two tests
+// are what keep that claim honest: the first catches a key defined somewhere
+// other than storageKeys.ts, the second catches one defined there but never
+// documented. Renames need no guard — the docs list is built from the
+// constants themselves.
+// ---------------------------------------------------------------------------
+
+const SRC_DIR = dirname(fileURLToPath(import.meta.url));
+// Assembled rather than written out, so this file doesn't trip its own scan
+const KEY_NAMESPACE = ["arena", "desk:"].join("-");
+
+function tsFilesUnder(dir: string): string[] {
+  const found: string[] = [];
+  for (const entry of readdirSync(dir)) {
+    const full = join(dir, entry);
+    if (statSync(full).isDirectory()) {
+      found.push(...tsFilesUnder(full));
+    } else if (entry.endsWith(".ts")) {
+      found.push(full);
+    }
+  }
+  return found;
+}
+
+describe("storage key registry", () => {
+  it("is the only module that spells out a storage key", () => {
+    const strays: string[] = [];
+
+    for (const file of tsFilesUnder(SRC_DIR)) {
+      const name = relative(SRC_DIR, file);
+      if (name === "storageKeys.ts") continue;
+      if (readFileSync(file, "utf8").includes(KEY_NAMESPACE)) {
+        strays.push(name);
+      }
+    }
+
+    expect(strays).toEqual([]);
+  });
+
+  it("documents every key it exports", () => {
+    // Not .filter() with a predicate — the exports narrow to string literals,
+    // so a `value is string` guard is rejected as unassignable
+    const exported: string[] = [];
+    for (const value of Object.values(storageKeys)) {
+      if (typeof value === "string" && value.startsWith(KEY_NAMESPACE)) {
+        exported.push(value);
+      }
+    }
+
+    // Guard against the filter silently matching nothing
+    expect(exported.length).toBeGreaterThan(0);
+
+    const documented = STORAGE_KEY_DOCS.map(([label]) => label);
+    for (const key of exported) {
+      // startsWith, so the layout prefix matches its "…" display label
+      const isDocumented = documented.some((label) => label.startsWith(key));
+      expect(
+        isDocumented,
+        `"${key}" is exported from storageKeys.ts but missing from ` +
+          `STORAGE_KEY_DOCS — the about panel would not disclose it`,
+      ).toBe(true);
+    }
+  });
+});
 
 describe("request retry policy", () => {
   it("retries rate limits and server faults", () => {
@@ -233,7 +306,7 @@ describe("persistence", () => {
   });
 
   it("returns null for corrupted storage", () => {
-    localStorage.setItem("arena-desk:layout:broken", "NOT JSON");
+    localStorage.setItem(`${LAYOUT_KEY_PREFIX}broken`, "NOT JSON");
     expect(loadLayout("broken")).toBeNull();
   });
 

@@ -5,21 +5,16 @@
 import type { CardState } from "./scatter";
 import { scatterLayout, scatterInto } from "./scatter";
 import { getStorage } from "./storage";
+import { LAYOUT_KEY_PREFIX } from "./storageKeys";
 
 export type ChannelLayout = Record<string, CardState>; // key = block id as string
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-const STORAGE_KEY_PREFIX = "arena-desk:layout:";
 
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
 
 function layoutKey(slug: string): string {
-  return `${STORAGE_KEY_PREFIX}${slug}`;
+  return `${LAYOUT_KEY_PREFIX}${slug}`;
 }
 
 /**

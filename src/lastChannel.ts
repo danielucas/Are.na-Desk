@@ -3,8 +3,7 @@
 // ---------------------------------------------------------------------------
 
 import { getStorage } from "./storage";
-
-const STORAGE_KEY = "arena-desk:last-channel";
+import { LAST_CHANNEL_KEY as STORAGE_KEY } from "./storageKeys";
 
 export function saveLastChannel(slug: string): void {
   const storage = getStorage();

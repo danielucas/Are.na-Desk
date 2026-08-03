@@ -6,8 +6,7 @@ import { createPanel } from "./panel";
 import type { PanelHandle } from "./panel";
 import { getStorage } from "../storage";
 import { REPO_URL, TOKENS_URL } from "../links";
-
-const SEEN_KEY = "arena-desk:seen-about";
+import { SEEN_ABOUT_KEY as SEEN_KEY, STORAGE_KEY_DOCS } from "../storageKeys";
 
 // ---------------------------------------------------------------------------
 // First-run flag
@@ -62,7 +61,7 @@ function link(parent: HTMLElement, text: string, href: string): void {
  */
 function defs(
   parent: HTMLElement,
-  rows: Array<[string, string]>,
+  rows: ReadonlyArray<readonly [string, string]>,
   opts: { stack?: boolean } = {},
 ): void {
   const list = document.createElement("dl");
@@ -152,16 +151,8 @@ const TABS: TabSpec[] = [
         "Are.na Desk only communicates with the Are.na API at api.are.na. " +
         "Everything is kept in this browser's local storage."
       );
-      defs(
-        el,
-        [
-          ["arena-desk:token", "your access token"],
-          ["arena-desk:layout:…", "where you put the cards, per channel"],
-          ["arena-desk:last-channel", "the last channel you opened"],
-          ["arena-desk:seen-about", "whether you've seen this panel"],
-        ],
-        { stack: true },
-      );
+      // Generated from storageKeys.ts so this claim can't drift from the code
+      defs(el, STORAGE_KEY_DOCS, { stack: true });
       para(
         el,
         "log out removes the token from this browser. To revoke the token entirely, " +
